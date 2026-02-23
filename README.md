@@ -6,7 +6,7 @@
 
 ## 📸 Aperçu du Projet
 
-![Dashboard AutoFleet](screenshot.png)
+!(screenshot.png)
 
 ---
 
