@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AutoFleet — Gestion de Flotte</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🚘</div>
+      <span class="brand-name">AutoFleet</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">◈</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-page="voitures">
+        <span class="nav-icon">◉</span>
+        <span>Voitures</span>
+      </a>
+      <a href="#" class="nav-item" data-page="locations">
+        <span class="nav-icon">◎</span>
+        <span>Locations</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle" id="themeToggle" title="Changer le thème">
+        <span id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark Mode</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MOBILE TOGGLE ===== -->
+  <button class="mobile-toggle" id="mobileToggle">☰</button>
+  <div class="overlay" id="overlay"></div>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content">
+
+    <!-- ======== PAGE: DASHBOARD ======== -->
+    <section class="page active" id="page-dashboard">
+      <header class="page-header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="subtitle">Vue d'ensemble de votre flotte</p>
+        </div>
+      </header>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card" id="stat-total">
+          <div class="stat-label">Total Voitures</div>
+          <div class="stat-value" id="dash-total">0</div>
+          <div class="stat-sub">flotte complète</div>
+        </div>
+        <div class="stat-card green" id="stat-dispo">
+          <div class="stat-label">Disponibles</div>
+          <div class="stat-value" id="dash-dispo">0</div>
+          <div class="stat-sub">prêtes à louer</div>
+        </div>
+        <div class="stat-card orange" id="stat-louees">
+          <div class="stat-label">Louées</div>
+          <div class="stat-value" id="dash-louees">0</div>
+          <div class="stat-sub">en location</div>
+        </div>
+        <div class="stat-card blue" id="stat-clients">
+          <div class="stat-label">Clients</div>
+          <div class="stat-value" id="dash-clients">0</div>
+          <div class="stat-sub">locations actives</div>
+        </div>
+        <div class="stat-card purple" id="stat-revenus">
+          <div class="stat-label">Revenus Totaux</div>
+          <div class="stat-value" id="dash-revenus">0 DH</div>
+          <div class="stat-sub">calculés auto</div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h3>État de la Flotte</h3>
+          <div class="chart-wrapper">
+            <canvas id="fleetChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Revenus par Location</h3>
+          <div class="chart-wrapper">
+            <canvas id="revenusChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent rentals -->
+      <div class="recent-card">
+        <h3>Dernières Locations</h3>
+        <table class="data-table" id="dash-recent-table">
+          <thead>
+            <tr>
+              <th>Client</th>
+              <th>Voiture</th>
+              <th>Date Début</th>
+              <th>Date Fin</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody id="dash-recent-body">
+            <tr><td colspan="5" class="empty-msg">Aucune location enregistrée.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ======== PAGE: VOITURES ======== -->
+    <section class="page" id="page-voitures">
+      <header class="page-header">
+        <div>
+          <h1>Gestion des Voitures</h1>
+          <p class="subtitle">Ajoutez, modifiez ou supprimez vos véhicules</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddVoiture">+ Ajouter une Voiture</button>
+      </header>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchVoiture" placeholder="🔍  Rechercher une voiture..." />
+        <select class="filter-select" id="filterEtat">
+          <option value="">Tous les états</option>
+          <option value="disponible">Disponible</option>
+          <option value="louée">Louée</option>
+        </select>
+      </div>
+
+      <div class="table-card">
+        <table class="data-table" id="voituresTable">
+          <thead>
+            <tr>
+              <th data-sort="marque">Marque <span class="sort-arrow">↕</span></th>
+              <th data-sort="modele">Modèle <span class="sort-arrow">↕</span></th>
+              <th data-sort="annee">Année <span class="sort-arrow">↕</span></th>
+              <th data-sort="prixJour">Prix/Jour <span class="sort-arrow">↕</span></th>
+              <th>État</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="voituresBody">
+            <tr><td colspan="6" class="empty-msg">Aucune voiture enregistrée.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ======== PAGE: LOCATIONS ======== -->
+    <section class="page" id="page-locations">
+      <header class="page-header">
+        <div>
+          <h1>Gestion des Locations</h1>
+          <p class="subtitle">Gérez toutes vos locations en un coup d'œil</p>
+        </div>
+        <button class="btn btn-primary" id="btnAddLocation">+ Nouvelle Location</button>
+      </header>
+
+      <div class="toolbar">
+        <input type="text" class="search-input" id="searchLocation" placeholder="🔍  Rechercher une location..." />
+      </div>
+
+      <div class="table-card">
+        <table class="data-table" id="locationsTable">
+          <thead>
+            <tr>
+              <th data-sort="client">Client <span class="sort-arrow">↕</span></th>
+              <th>Voiture</th>
+              <th data-sort="dateDebut">Date Début <span class="sort-arrow">↕</span></th>
+              <th data-sort="dateFin">Date Fin <span class="sort-arrow">↕</span></th>
+              <th data-sort="montant">Montant <span class="sort-arrow">↕</span></th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="locationsBody">
+            <tr><td colspan="6" class="empty-msg">Aucune location enregistrée.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== MODAL: VOITURE ===== -->
+  <div class="modal-backdrop" id="modalVoiture">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalVoitureTitre">Ajouter une Voiture</h2>
+        <button class="modal-close" data-close="modalVoiture">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="formVoiture" novalidate>
+          <input type="hidden" id="voitureId" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Marque *</label>
+              <input type="text" id="voitureMarque" placeholder="ex: Toyota" required />
+              <span class="error-msg" id="err-marque"></span>
+            </div>
+            <div class="form-group">
+              <label>Modèle *</label>
+              <input type="text" id="voitureModele" placeholder="ex: Corolla" required />
+              <span class="error-msg" id="err-modele"></span>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Année *</label>
+              <input type="number" id="voitureAnnee" placeholder="ex: 2022" min="1900" max="2030" required />
+              <span class="error-msg" id="err-annee"></span>
+            </div>
+            <div class="form-group">
+              <label>Prix par jour (DH) *</label>
+              <input type="number" id="voiturePrix" placeholder="ex: 300" min="1" required />
+              <span class="error-msg" id="err-prix"></span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>État</label>
+            <select id="voitureEtat">
+              <option value="disponible">Disponible</option>
+              <option value="louée">Louée</option>
+            </select>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close="modalVoiture">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: LOCATION ===== -->
+  <div class="modal-backdrop" id="modalLocation">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalLocationTitre">Nouvelle Location</h2>
+        <button class="modal-close" data-close="modalLocation">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="formLocation" novalidate>
+          <input type="hidden" id="locationId" />
+          <div class="form-group">
+            <label>Nom du Client *</label>
+            <input type="text" id="locationClient" placeholder="ex: Ahmed Benali" required />
+            <span class="error-msg" id="err-client"></span>
+          </div>
+          <div class="form-group">
+            <label>Voiture *</label>
+            <select id="locationVoiture" required>
+              <option value="">-- Sélectionnez une voiture disponible --</option>
+            </select>
+            <span class="error-msg" id="err-voiture"></span>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date de Début *</label>
+              <input type="date" id="locationDebut" required />
+              <span class="error-msg" id="err-debut"></span>
+            </div>
+            <div class="form-group">
+              <label>Date de Fin *</label>
+              <input type="date" id="locationFin" required />
+              <span class="error-msg" id="err-fin"></span>
+            </div>
+          </div>
+          <div class="form-group montant-display">
+            <label>Montant Total Calculé</label>
+            <div class="montant-box" id="montantCalc">— DH</div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" data-close="modalLocation">Annuler</button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: CONFIRMATION ===== -->
+  <div class="modal-backdrop" id="modalConfirm">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>Confirmer la Suppression</h2>
+        <button class="modal-close" data-close="modalConfirm">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMsg">Voulez-vous vraiment supprimer cet élément ?</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" data-close="modalConfirm">Annuler</button>
+          <button class="btn btn-danger" id="confirmOk">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
